@@ -7,3 +7,7 @@
 This is currently deployed on Railway at `https://trusty.up.railway.app`. Merge a pull request into main to kick off a new deploy.
 
 Railway credentials are [here in 1Password](https://start.1password.com/open/i?a=OSUTKK6PG5GY5JC74QHSFRBEG4&v=ka5wmagat2ustls3xpttufgg64&i=6evn7jsag6znjqj7mo5tjh42ei&h=ifttt.1password.com).
+
+## Build/Deployment updates → Slack
+
+Railway will post messages to [#trusty-events-via-railway](https://ifttt.slack.com/channels/trusty-events-via-railway) about builds and deployments.
