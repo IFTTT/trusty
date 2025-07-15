@@ -643,6 +643,33 @@ app.post(
 );
 
 app.post(
+  "/ifttt/v1/queries/timeout",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    function returnData() {
+      let data = [
+        {
+          random_number: Math.random() * 1000,
+        },
+      ];
+
+      let cursor = null;
+
+      if (req.body.limit == 1) {
+        cursor = helpers.generateUniqueId();
+      }
+
+      res.status(200).send({
+        data: data,
+        cursor: cursor,
+      });
+    }
+
+    setTimeout(returnData, 100000000) // 27.7 hours ⏳
+  }
+)
+
+app.post(
   "/ifttt/v1/queries/always_skip",
   middleware.accessTokenCheck,
   (req, res) => {
