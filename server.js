@@ -665,7 +665,7 @@ app.post(
       });
     }
 
-    setTimeout(returnData, 100000000) // 27.7 hours ⏳
+    setTimeout(returnData, 65000) // 65 seconds, matching https://github.com/IFTTT/shimmy/pull/925
   }
 )
 
