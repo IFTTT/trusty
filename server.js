@@ -238,6 +238,24 @@ app.post(
 );
 
 // Trigger endpoints
+app.post('/ifttt/v1/triggers/dropdown_field_errors', (req, res) => {
+  const { triggerFields, trigger_identity } = req.body
+
+  const item = {
+    id: helpers.generateUniqueId(),
+    value: `Triggered at ${new Date().toISOString()}`,
+    meta: {
+      id: helpers.generateUniqueId(),
+      timestamp: Math.floor(Date.now() / 1000),
+    },
+  }
+
+  res.status(200).send({
+    data: [item],
+    cursor: null,
+  })
+})
+
 app.post(
   "/ifttt/v1/triggers/trigger_error",
   middleware.accessTokenCheck,
@@ -973,6 +991,29 @@ app.post(
     setTimeout(returnOptions, 1);
   }
 );
+
+app.post(
+  "/ifttt/v1/triggers/dropdown_field_errors/fields/this_will_error_50_of_the_time/options",
+  middleware.accessTokenCheck,
+  (req, res) => {
+  if (Math.random() < 0.5) {
+    return res.status(500).send({
+      errors: [{
+        message: 'Random simulated failure: please try again.',
+      }],
+    })
+  }
+
+  const options = [
+    { label: 'Option A', value: 'a' },
+    { label: 'Option B', value: 'b' },
+    { label: 'Option C', value: 'c' },
+  ]
+
+  res.status(200).send({
+    data: options,
+  })
+})
 
 app.post(
   "/ifttt/v1/actions/with_dynamic_action_field_values/fields/nested_emojis/options",
