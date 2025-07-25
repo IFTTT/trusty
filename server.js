@@ -2429,6 +2429,43 @@ app.post(
 );
 
 app.post(
+  "/ifttt/v1/actions/checkbox_field_errors",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    res.status(200).send({
+      data: [
+        {
+          id: helpers.generateUniqueId(),
+        },
+      ],
+    });
+  }
+);
+
+app.post(
+  "/ifttt/v1/actions/checkbox_field_errors/fields/this_will_error_50_of_the_time/options",
+  middleware.accessTokenCheck,
+  (req, res) => {
+  if (Math.random() < 0.5) {
+    return res.status(500).send({
+      errors: [{
+        message: 'Random simulated failure: please try again.',
+      }],
+    })
+  }
+
+  const options = [
+    { label: 'Option A', value: 'a' },
+    { label: 'Option B', value: 'b' },
+    { label: 'Option C', value: 'c' },
+  ]
+
+  res.status(200).send({
+    data: options,
+  })
+})
+
+app.post(
   "/ifttt/v1/actions/action_with_dynamic_checkbox_field",
   middleware.accessTokenCheck,
   (req, res) => {
