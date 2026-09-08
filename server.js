@@ -465,6 +465,94 @@ app.post(
   }
 );
 
+// Dead-auth fixtures
+//
+// A 401 that survives whatever refresh the auth type supports becomes
+// Errors::ReconnectRequired in IFE, and the owner sees "Please reconnect
+// Trusty." instead of generic copy. These exist so that path can be exercised
+// end to end without corrupting stored tokens or holding server state.
+//
+//   trigger_auth_dead            401, empty body  -> bare copy
+//   trigger_auth_dead_validated  401, errors[]    -> copy quoting the message
+//   trigger_auth_expires         401 once stale   -> curable by reconnecting
+//
+// In the platform, set dynamic_validation OFF for trigger_auth_dead so an
+// Applet can still be saved on it, and ON for the other two so the save fails.
+
+const authExpiredError = {
+  errors: [{ message: "Your session has expired" }],
+};
+
+app.post(
+  "/ifttt/v1/triggers/trigger_auth_dead",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    // No body, so IFE has no owner-safe text to quote and falls back to the
+    // bare "Please reconnect ‹service›." form.
+    res.status(401).send();
+  }
+);
+
+app.post(
+  "/ifttt/v1/triggers/trigger_auth_dead_validated",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    res.status(401).send(authExpiredError);
+  }
+);
+
+app.post(
+  "/ifttt/v1/triggers/trigger_auth_dead_validated/validate",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    res.status(401).send(authExpiredError);
+  }
+);
+
+// Healthy until the caller's token passes the expiry window, then 401 until the
+// owner reconnects and picks up a freshly stamped one. Time-based, so there is
+// no state to reset and nothing that can affect anyone else's connection.
+app.post(
+  "/ifttt/v1/triggers/trigger_auth_expires",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    if (helpers.accessTokenExpired(req)) {
+      return res.status(401).send(authExpiredError);
+    }
+
+    res.status(200).send({
+      data: [
+        {
+          created_at: new Date().toISOString(),
+          color: "green",
+          meta: {
+            id: helpers.generateUniqueId(),
+            timestamp: Math.floor(Date.now() / 1000),
+          },
+        },
+      ],
+    });
+  }
+);
+
+app.post(
+  "/ifttt/v1/triggers/trigger_auth_expires/validate",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    if (helpers.accessTokenExpired(req)) {
+      return res.status(401).send(authExpiredError);
+    }
+
+    const { values } = req.body;
+    const data = {};
+    Object.keys(values).forEach((field) => {
+      data[field] = { valid: true, message: null };
+    });
+
+    res.status(200).send({ data: data });
+  }
+);
+
 // Query endpoints
 
 app.post(
@@ -3080,7 +3168,7 @@ app.post("/token", function (req, res) {
   ) {
     res.status(200).send({
       token_type: "Bearer",
-      access_token: TEST_ACCESS_TOKEN, // A unique access code for the user (https://ift.tt/2Soss0q)
+      access_token: helpers.issueAccessToken(), // A unique access code for the user (https://ift.tt/2Soss0q)
       refresh_token: helpers.generateUniqueId(), // A refresh token to retrieve a new access token in the future (https://ift.tt/2VNXCAG)
     });
   } else if (
@@ -3088,13 +3176,13 @@ app.post("/token", function (req, res) {
   ) {
     res.status(200).send({
       token_type: "Bearer",
-      access_token: TEST_ACCESS_TOKEN, // A unique access code for the user (https://ift.tt/2Soss0q)
+      access_token: helpers.issueAccessToken(), // A unique access code for the user (https://ift.tt/2Soss0q)
       refresh_token: helpers.generateUniqueId(), // A refresh token to retrieve a new access token in the future (https://ift.tt/2VNXCAG)
     });
   } else {
     res.status(200).send({
       token_type: "Bearer",
-      access_token: TEST_ACCESS_TOKEN, // A unique access code for the user (https://ift.tt/2Soss0q)
+      access_token: helpers.issueAccessToken(), // A unique access code for the user (https://ift.tt/2Soss0q)
       refresh_token: helpers.generateUniqueId(), // A refresh token to retrieve a new access token in the future (https://ift.tt/2VNXCAG)
     });
   }

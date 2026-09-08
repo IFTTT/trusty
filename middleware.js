@@ -5,6 +5,8 @@ const TEST_ACCESS_TOKEN = process.env.TEST_ACCESS_TOKEN;
 const FULLSTACK_KEY = process.env.FULLSTACK_KEY;
 const AUTH_ALWAYS_FAILS_KEY = process.env.AUTH_ALWAYS_FAILS_KEY;
 
+const helpers = require("./helpers");
+
 module.exports = {
   serviceKeyCheck: function (req, res, next) {
     const key = req.get("IFTTT-Service-Key");
@@ -24,24 +26,30 @@ module.exports = {
   accessTokenCheck: function (req, res, next) {
     console.log('req.get("Authorization")', req.get("Authorization"));
     console.log('req.get("Api-Key")', req.get("Api-Key"));
+    // Each 401 returns. Without that, next() runs the route handler anyway and
+    // it throws ERR_HTTP_HEADERS_SENT trying to respond a second time.
     if (req.get("Authorization")) {
       if (req.get("Authorization") == "Bearer") {
-        res.status(401).send({
+        return res.status(401).send({
           errors: [{ message: "🔏 Empty token header" }],
         });
-      } else if (req.get("Authorization") !== `Bearer ${TEST_ACCESS_TOKEN}`) {
-        res.status(401).send({
+      } else if (
+        !helpers.isValidAccessToken(
+          req.get("Authorization").replace(/^Bearer /, "")
+        )
+      ) {
+        return res.status(401).send({
           errors: [{ message: "🔒 Incorrect bearer token" }],
         });
       }
     } else if (req.get("Api-Key")) {
       if (!req.get("Api-Key").startsWith(`secret ${TEST_ACCESS_TOKEN}`)) {
-        res.status(401).send({
+        return res.status(401).send({
           errors: [{ message: "🔒 Incorrect API key" }],
         });
       }
     } else {
-      res.status(401).send({
+      return res.status(401).send({
         errors: [{ message: "🔒 Missing authorization header" }],
       });
     }
