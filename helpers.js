@@ -1,8 +1,8 @@
 const TEST_ACCESS_TOKEN = process.env.TEST_ACCESS_TOKEN;
 
 // How long a stamped access token stays fresh, for the trigger_auth_expires
-// fixture. Long enough to build an Applet, short enough not to wait around.
-const EXPIRING_TOKEN_WINDOW_MS = 3 * 60 * 1000;
+// fixture. Long enough to configure a step, short enough not to wait around.
+const EXPIRING_TOKEN_WINDOW_MS = 60 * 1000;
 
 // Access tokens come in two shapes. The bare TEST_ACCESS_TOKEN is what we
 // issued before we started stamping, and existing connections still hold it.

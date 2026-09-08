@@ -501,8 +501,19 @@ app.post(
   }
 );
 
+// Trigger-level validation, reached when the trigger has dynamic_validation on.
 app.post(
   "/ifttt/v1/triggers/trigger_auth_dead_validated/validate",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    res.status(401).send(authExpiredError);
+  }
+);
+
+// Per-field validation, reached when a trigger field has a dynamic validator.
+// IFE handles the two paths in different places, so both are worth having.
+app.post(
+  "/ifttt/v1/triggers/trigger_auth_dead_validated/fields/validate_me/validate",
   middleware.accessTokenCheck,
   (req, res) => {
     res.status(401).send(authExpiredError);
@@ -550,6 +561,18 @@ app.post(
     });
 
     res.status(200).send({ data: data });
+  }
+);
+
+app.post(
+  "/ifttt/v1/triggers/trigger_auth_expires/fields/validate_me/validate",
+  middleware.accessTokenCheck,
+  (req, res) => {
+    if (helpers.accessTokenExpired(req)) {
+      return res.status(401).send(authExpiredError);
+    }
+
+    res.status(200).send({ data: { valid: true, message: null } });
   }
 );
 
